@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import Plot from 'react-plotly.js';
 import './Chatbot.css';
 
 function Chatbot() {
@@ -8,17 +9,14 @@ function Chatbot() {
     { sender: 'bot', text: 'Hola, soy tu asistente virtual. ¿En qué puedo ayudarte?', type: 'text' },
   ]);
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef(null); // Referencia al final del contenedor de mensajes
-  const messagesContainerRef = useRef(null); // Referencia al contenedor de mensajes
+  const messagesEndRef = useRef(null);
 
-  // Función para desplazar automáticamente al final del chat
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Ejecutar el scroll automáticamente al final cuando se actualicen los mensajes
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -37,9 +35,11 @@ function Chatbot() {
 
       const { response: botResponse, type } = response.data;
 
+      console.log("Bot response:", botResponse);
+
       const botMessage =
-        type === 'image'
-          ? { sender: 'bot', type: 'image', url: `http://localhost:8000/${botResponse}` }
+        type === 'chart'
+          ? { sender: 'bot', type: 'chart', chartData: typeof botResponse === 'string' ? JSON.parse(botResponse) : botResponse }
           : { sender: 'bot', type: 'text', text: botResponse };
 
       setMessages((prevMessages) => [...prevMessages, botMessage]);
@@ -47,30 +47,42 @@ function Chatbot() {
       console.error('Error al enviar el mensaje:', error);
     }
   };
+  console.log("messages", messages);
 
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">Asistente Virtual</div>
-      <div
-        className="chatbot-messages"
-        ref={messagesContainerRef} // Referencia para el contenedor
-      >
+      <div className="chatbot-messages">
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender}`}>
-            {msg.type === 'image' ? (
-              <img src={msg.url} alt="Bot response" />
+            {msg.type === 'chart' ? (
+              <div className="plot-container">
+                <h4>{msg.chartData.title}</h4>
+                <Plot
+                  data={[
+                    {
+                      x: msg.chartData.chart_data.x,
+                      y: msg.chartData.chart_data.y,
+                      type: msg.chartData.chart_data.type || 'scatter',
+                      mode: msg.chartData.chart_data.mode || 'lines+markers',
+                      name: msg.chartData.chart_data.name || '',
+                    },
+                  ]}
+                  layout={{
+                    title: msg.chartData.title || 'Gráfico',
+                    xaxis: { title: 'Eje X' },
+                    yaxis: { title: 'Eje Y' },
+                    responsive: true,
+                  }}
+                />
+              </div>
             ) : (
               <div className="message-content">
-                {msg.sender === 'bot' ? (
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
-                ) : (
-                  <span>{msg.text}</span>
-                )}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </div>
             )}
           </div>
         ))}
-        {/* Punto de referencia para desplazar el scroll al final */}
         <div ref={messagesEndRef}></div>
       </div>
       <div className="chatbot-input">
