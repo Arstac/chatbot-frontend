@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import './Chatbot.css'; // Importamos el CSS
 
 function Chatbot() {
   const [messages, setMessages] = useState([
@@ -21,9 +23,6 @@ function Chatbot() {
 
       const { response: botResponse, type } = response.data;
 
-      console.log('Bot response:', botResponse);
-      console.log('Response type:', type);
-
       const botMessage =
         type === 'image'
           ? { sender: 'bot', type: 'image', url: `http://localhost:8000/${botResponse}` }
@@ -36,22 +35,29 @@ function Chatbot() {
   };
 
   return (
-    <div>
-      <h1>Chatbot</h1>
-      <div style={{ border: '1px solid #ccc', padding: '10px', height: '400px', overflowY: 'scroll' }}>
+    <div className="chatbot-container">
+      <div className="chatbot-header">Asistente Virtual</div>
+      <div className="chatbot-messages">
         {messages.map((msg, index) => (
-          <div key={index} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
+          <div key={index} className={`message ${msg.sender}`}>
             {msg.type === 'image' ? (
-              <img src={msg.url} alt="Bot response" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+              <img src={msg.url} alt="Bot response" />
             ) : (
-              <p><strong>{msg.sender === 'user' ? 'Tú' : 'Bot'}:</strong> {msg.text}</p>
+              <div className="message-content">
+                {msg.sender === 'bot' ? (
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                ) : (
+                  <span>{msg.text}</span>
+                )}
+              </div>
             )}
           </div>
         ))}
       </div>
-      <div>
+      <div className="chatbot-input">
         <input
           type="text"
+          placeholder="Escribe un mensaje..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyUp={(e) => (e.key === 'Enter' ? handleSend() : null)}

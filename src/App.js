@@ -1,11 +1,9 @@
-// src/App.js
-
 import React from 'react';
 import Chatbot from './Chatbot';
 
 function App() {
   return (
-    <div className="App">
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <Chatbot />
     </div>
   );
