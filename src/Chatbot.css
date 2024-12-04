@@ -1,6 +1,7 @@
 .chatbot-container {
     display: flex;
     flex-direction: column;
+    height: 100vh;
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
@@ -24,8 +25,10 @@
     flex: 1;
     background-color: #f9f9f9;
     padding: 15px;
-    overflow-y: scroll;
+    overflow-y: auto; /* Habilitar scroll vertical */
     height: 400px;
+    scroll-behavior: smooth; /* Hacer el scroll suave */
+    position: relative;
   }
   
   .message {

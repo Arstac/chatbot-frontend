@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import './Chatbot.css'; // Importamos el CSS
+import './Chatbot.css';
 
 function Chatbot() {
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hola, soy tu asistente virtual. ¿En qué puedo ayudarte?', type: 'text' },
   ]);
   const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null); // Referencia al final del contenedor de mensajes
+  const messagesContainerRef = useRef(null); // Referencia al contenedor de mensajes
+
+  // Función para desplazar automáticamente al final del chat
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Ejecutar el scroll automáticamente al final cuando se actualicen los mensajes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = async () => {
     if (input.trim() === '') return;
@@ -37,7 +51,10 @@ function Chatbot() {
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">Asistente Virtual</div>
-      <div className="chatbot-messages">
+      <div
+        className="chatbot-messages"
+        ref={messagesContainerRef} // Referencia para el contenedor
+      >
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender}`}>
             {msg.type === 'image' ? (
@@ -53,6 +70,8 @@ function Chatbot() {
             )}
           </div>
         ))}
+        {/* Punto de referencia para desplazar el scroll al final */}
+        <div ref={messagesEndRef}></div>
       </div>
       <div className="chatbot-input">
         <input
