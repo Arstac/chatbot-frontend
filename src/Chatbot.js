@@ -11,7 +11,6 @@ function Chatbot() {
     { sender: 'bot', text: 'Hola, soy tu asistente virtual. ¿En qué puedo ayudarte?', type: 'text' },
   ]);
   const [input, setInput] = useState('');
-  const [expandedMessage, setExpandedMessage] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -24,10 +23,6 @@ function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const toggleDetails = (index) => {
-    setExpandedMessage(expandedMessage === index ? null : index);
-  };
-
   const handleSend = async () => {
     if (input.trim() === '') return;
 
@@ -36,42 +31,22 @@ function Chatbot() {
     setInput('');
 
     try {
-      let botResponse;
-      let endpoint = null;
+      const response = await axios.post(API_BASE_URL, {
+        message: input,
+      });
 
-      if (input.toLowerCase().includes('costo final')) {
-        endpoint = `${API_BASE_URL}/costo_final/`;
-      } else if (input.toLowerCase().includes('duración real')) {
-        endpoint = `${API_BASE_URL}/duracion_real/`;
-      } else if (input.toLowerCase().includes('satisfacción cliente')) {
-        endpoint = `${API_BASE_URL}/satisfaccion_cliente/`;
-      } else if (input.toLowerCase().includes('desviación presupuestaria')) {
-        endpoint = `${API_BASE_URL}/desviacion_presupuestaria/`;
-      }
+      const { response: botResponse, type } = response.data;
 
-      if (endpoint) {
-        const requestData = {
-          features: [100, 1, 2000, 0, 1, 50, 75]
-        };
-        const response = await axios.post(endpoint, requestData);
-        botResponse = response.data;
+      console.log("Bot response:", botResponse);
 
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: 'bot', type: 'prediction', prediction: botResponse }
-        ]);
-      } else {
-        const response = await axios.post('http://localhost:8000/api/chatbot/', { message: input });
-        botResponse = response.data.response;
+      const botMessage =
+        type === 'chart'
+          ? { sender: 'bot', type: 'chart', chartData: typeof botResponse === 'string' ? JSON.parse(botResponse) : botResponse }
+          : { sender: 'bot', type: 'text', text: botResponse };
 
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender: 'bot', type: 'text', text: botResponse }
-        ]);
-      }
+      setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
-      setMessages((prevMessages) => [...prevMessages, { sender: 'bot', type: 'text', text: 'Ocurrió un error. Inténtalo de nuevo.' }]);
     }
   };
 
@@ -81,22 +56,26 @@ function Chatbot() {
       <div className="chatbot-messages">
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender}`}>
-            {msg.type === 'prediction' ? (
-              <div className="prediction-container">
-                <h4>🔍 Resultado de Predicción</h4>
-                {Object.entries(msg.prediction).map(([key, value]) => (
-                  <p key={key}><strong>{key}:</strong> {value}</p>
-                ))}
-                <button className="details-button" onClick={() => toggleDetails(index)}>
-                  {expandedMessage === index ? "Ocultar detalles" : "Ver detalles"}
-                </button>
-                {expandedMessage === index && (
-                  <div className="details-box">
-                    <p>📊 Esta predicción se basa en modelos de Machine Learning entrenados con datos de construcción.</p>
-                    <p>⚙️ Para obtener mejores resultados, asegúrate de proporcionar datos precisos.</p>
-                    <p>📅 Predicción realizada el: {new Date().toLocaleString()}</p>
-                  </div>
-                )}
+            {msg.type === 'chart' ? (
+              <div className="plot-container">
+                <h4>{msg.chartData.title}</h4>
+                <Plot
+                  data={[
+                    {
+                      x: msg.chartData.chart_data.x,
+                      y: msg.chartData.chart_data.y,
+                      type: msg.chartData.chart_data.type || 'scatter',
+                      mode: msg.chartData.chart_data.mode || 'lines+markers',
+                      name: msg.chartData.chart_data.name || '',
+                    },
+                  ]}
+                  layout={{
+                    title: msg.chartData.title || 'Gráfico',
+                    xaxis: { title: 'Eje X' },
+                    yaxis: { title: 'Eje Y' },
+                    responsive: true,
+                  }}
+                />
               </div>
             ) : (
               <div className="message-content">
