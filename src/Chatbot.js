@@ -3,8 +3,11 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import Plot from 'react-plotly.js';
 import './Chatbot.css';
+import UploadPDFButton from './components/UploadPDFButton'; 
+import "./components/UploadPDFButton.css";
 
-const API_BASE_URL = 'http://localhost:8000/api/predict';
+
+const API_BASE_URL = 'http://localhost:8000/chatbot/';
 
 function Chatbot() {
   const [messages, setMessages] = useState([
@@ -50,6 +53,35 @@ function Chatbot() {
     }
   };
 
+  const handleUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file && file.type === "application/pdf") {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      try {
+        const response = await fetch("http://localhost:8000/upload-pdf/", {
+          method: "POST",
+          body: formData,
+        });
+  
+        if (response.ok) {
+          const pdfBlob = await response.blob();
+          const url = URL.createObjectURL(pdfBlob);  // Crear URL del blob
+          
+          window.open(url, '_blank');  // Abrir en nueva pestaña
+        } else {
+          document.getElementById("result").innerText = "Error al subir el PDF";
+        }
+      } catch (error) {
+        document.getElementById("result").innerText = "Error al subir el PDF";
+      }
+    } else {
+      alert("Por favor, selecciona un archivo PDF válido.");
+    }
+  };
+  
+
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">Asistente Virtual</div>
@@ -87,6 +119,7 @@ function Chatbot() {
         <div ref={messagesEndRef}></div>
       </div>
       <div className="chatbot-input">
+      <UploadPDFButton onUpload={handleUpload} />
         <input
           type="text"
           placeholder="Escribe un mensaje..."
