@@ -69,9 +69,17 @@ function Chatbot() {
           const pdfBlob = await response.blob();
           const url = URL.createObjectURL(pdfBlob);  // Crear URL del blob
           
-          window.open(url, '_blank');  // Abrir en nueva pestaña
+          // Crear un enlace de descarga
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'informe_viabilidad.pdf';  // Nombre del archivo a descargar
+          link.textContent = 'Descargar Informe de Viabilidad';
+          link.style.display = 'block';
+
+          setMessages((prevMessages) => [...prevMessages, link]);
+          document.getElementById("result").innerText = "Exito al subir el PDF";
         } else {
-          document.getElementById("result").innerText = "Error al subir el PDF";
+          document.getElementById("result").innerText = "Error al subir el PDF response error";
         }
       } catch (error) {
         document.getElementById("result").innerText = "Error al subir el PDF";
@@ -80,6 +88,7 @@ function Chatbot() {
       alert("Por favor, selecciona un archivo PDF válido.");
     }
   };
+  
   
 
   return (
