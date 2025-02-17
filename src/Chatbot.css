@@ -165,3 +165,11 @@
     cursor: pointer;
     border-radius: 5px;
 }
+
+.pdf-download-link {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  margin: 10px 0;
+  display: block;
+}

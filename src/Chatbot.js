@@ -53,6 +53,42 @@ function Chatbot() {
     }
   };
 
+  // const handleUpload = async (event) => {
+  //   const file = event.target.files[0];
+  //   if (file && file.type === "application/pdf") {
+  //     const formData = new FormData();
+  //     formData.append("file", file);
+      
+  //     try {
+  //       const response = await fetch("http://localhost:8000/upload-pdf/", {
+  //         method: "POST",
+  //         body: formData,
+  //       });
+  
+  //       if (response.ok) {
+  //         const pdfBlob = await response.blob();
+  //         const url = URL.createObjectURL(pdfBlob);  // Crear URL del blob
+          
+  //         // Crear un enlace de descarga
+  //         const link = document.createElement('a');
+  //         link.href = url;
+  //         link.download = 'informe_viabilidad.pdf';  // Nombre del archivo a descargar
+  //         link.textContent = 'Descargar Informe de Viabilidad';
+  //         link.style.display = 'block';
+
+  //         setMessages((prevMessages) => [...prevMessages, link]);
+  //         document.getElementById("result").innerText = "Exito al subir el PDF";
+  //       } else {
+  //         document.getElementById("result").innerText = "Error en la respuesta";
+  //       }
+  //     } catch (error) {
+  //       document.getElementById("result").innerText = "Error al subir el PDF";
+  //     }
+  //   } else {
+  //     alert("Por favor, selecciona un archivo PDF válido.");
+  //   }
+  // };
+  
   const handleUpload = async (event) => {
     const file = event.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -67,19 +103,20 @@ function Chatbot() {
   
         if (response.ok) {
           const pdfBlob = await response.blob();
-          const url = URL.createObjectURL(pdfBlob);  // Crear URL del blob
-          
-          // Crear un enlace de descarga
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'informe_viabilidad.pdf';  // Nombre del archivo a descargar
-          link.textContent = 'Descargar Informe de Viabilidad';
-          link.style.display = 'block';
-
-          setMessages((prevMessages) => [...prevMessages, link]);
-          document.getElementById("result").innerText = "Exito al subir el PDF";
+          const url = URL.createObjectURL(pdfBlob);
+  
+          // Agregamos un mensaje que incluya el enlace de descarga
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              type: 'link',
+              url: url,
+              text: 'Descargar Informe de Viabilidad',
+            }
+          ]);
+          document.getElementById("result").innerText = "Éxito al subir el PDF";
         } else {
-          document.getElementById("result").innerText = "Error al subir el PDF response error";
+          document.getElementById("result").innerText = "Error en la respuesta";
         }
       } catch (error) {
         document.getElementById("result").innerText = "Error al subir el PDF";
@@ -88,7 +125,6 @@ function Chatbot() {
       alert("Por favor, selecciona un archivo PDF válido.");
     }
   };
-  
   
 
   return (
@@ -118,6 +154,16 @@ function Chatbot() {
                   }}
                 />
               </div>
+            ) : msg.type === 'link' ? (
+              <a
+                href={msg.url}
+                download="informe_viabilidad.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pdf-download-link"
+              >
+                {msg.text}
+              </a>
             ) : (
               <div className="message-content">
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
